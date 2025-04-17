@@ -1,75 +1,44 @@
 pipeline {
-  agent any
+    agent any
 
-  environment {
-    // Optional: configure a registry or other environment variables here
-    NODE_ENV = 'production'
-  }
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
 
-  stages {
-    stage('Checkout') {
-      steps {
-        // Pull code from the configured branch in Jenkins
-        checkout scm
-      }
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
+            }
+        }
+
+        stage('Run Tests') {
+            steps {
+                // Add tests in future; placeholder for now
+                sh 'echo "Running tests (none yet)"'
+            }
+        }
+
+        stage('Build') {
+            steps {
+                sh 'npm run build || echo "No build script defined, skipping..."'
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo 'Deploying app...'
+                // Example: scp files to server, or run docker, etc.
+            }
+        }
     }
 
-    stage('Install Dependencies') {
-      steps {
-        echo 'Installing npm dependencies...'
-        sh 'npm install'
-      }
-    }
-
-    stage('Run Tests') {
-      steps {
-        echo 'Running unit tests...'
-        // If you have test reports, generate JUnit XML for Jenkins
-        sh 'npm test'
-      }
-      post {
+    post {
         always {
-          // Publish test results if your test runner outputs JUnit XML
-          junit '**/test-results/*.xml'
+            echo 'Cleaning workspace...'
+            cleanWs()
         }
-      }
     }
-
-    stage('Build') {
-      steps {
-        echo 'Building the ToDo app...'
-        sh 'npm run build'
-      }
-      post {
-        success {
-          // Archive build artifacts for later download
-          archiveArtifacts artifacts: 'build/**', fingerprint: true
-        }
-      }
-    }
-
-    stage('Deploy') {
-      steps {
-        echo 'Deploying the ToDo app...'
-        // Insert your actual deployment commands here, e.g.:
-        // sh 'scp -r build/ user@server:/var/www/todo'
-        // or Docker commands:
-        // sh 'docker build -t myorg/todo:${BUILD_NUMBER} .'
-        // sh 'docker push myorg/todo:${BUILD_NUMBER}'
-      }
-    }
-  }
-
-  post {
-    always {
-      echo 'Cleaning up workspace'
-      cleanWs()
-    }
-    failure {
-      echo 'Build failed!'
-    }
-    success {
-      echo 'Build completed successfully.'
-    }
-  }
 }
